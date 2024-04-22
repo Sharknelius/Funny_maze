@@ -40,6 +40,12 @@ Last modified: 4/24/24
 		varying vec3 v_surfaceToLight;
 		varying vec3 v_surfaceToView;
 		varying vec3 v_spot_surfaceToLight;
+		uniform vec3 v_spot_light_pos;
+		uniform vec3 v_spot_light_direction;
+		
+		//point light
+		varying vec3 v_surfacePos;
+		uniform vec3 p_lightPos[10];
 		
 		//Bad guy spotlight location
 		uniform vec3 BadGuyLoc;
@@ -129,16 +135,12 @@ Last modified: 4/24/24
 		void main()
 		{
 			if(length(a_position)<5.0)
-			{
-			//fakenormal = vec3(a_position);
-			fakenormal = RotateObject(a_position).xyz;
-			}
+				fakenormal = RotateObject(a_position).xyz;
 			else
-			{
-			//Hanlde the plane.
-			fakenormal = vec3(0.0,1.0,0.0);
-			}
+				fakenormal = vec3(0.0,1.0,0.0);
+				
 			vec4 worldSpace = vec4(0.0,0.0,0.0,1.0);
+			
 			if(FaceCam)
 			{
 				vec3 F = normalize(vec3(cameraLoc.x,cameraLoc.y,-1.0*cameraLoc.z)- transform);
@@ -146,16 +148,15 @@ Last modified: 4/24/24
 				worldSpace = PositionObject(LookAt(F,U,a_position));
 			}
 			else
-			{
 				worldSpace = PositionObject(RotateObject(a_position));
-			}
+				
 			//Lighting Stuff
 			v_surfaceToLight = vec3(0.0,0.5,-5.0) - worldSpace.xyz;
 			v_surfaceToView = vec3(cameraLoc.x,cameraLoc.y,-1.0*cameraLoc.z) - worldSpace.xyz;
 
 
 
-			v_spot_surfaceToLight = vec3(5.0,0.0,-2.0) - worldSpace.xyz;	
+			v_spot_surfaceToLight = v_spot_light_pos - worldSpace.xyz;	
 
 			v_texcord = texcord;
 			
@@ -174,6 +175,11 @@ Last modified: 4/24/24
 		varying vec3 v_surfaceToLight;
 		varying vec3 v_surfaceToView; 
 		varying vec3 v_spot_surfaceToLight;
+		uniform vec3 v_spot_light_pos;
+		uniform vec3 v_spot_light_direction;
+		
+		uniform vec3 p_lightPos[10];
+		varying vec3 v_surfacePos;
 		
 		//!!!!!!!!!!!!!!!!Texture change !!!!!!!!!!!!!!!
 		varying vec2 v_texcord;
@@ -182,6 +188,35 @@ Last modified: 4/24/24
 		
 		void main()
 		{
+			/*float ambient = 0.1;
+					
+				vec3 directional_light_direction = normalize(vec3(20.0, 5.0, 20.0));
+				float d_light = dot(normalize(fakenormal), directional_light_direction * 0.25);
+				if (d_light < 0.0) {
+					d_light = 0.0;
+				}	
+					//POINT LIGHT STUFF
+				//vec3 point_light = vec3(0.0);
+				float point_light = 0.0;
+				for (int i = 0; i < 10; i++) 
+				{
+					vec3 surfaceToPointLight = p_lightPos[i] - v_surfacePos;
+					float p_light = dot(normalize(fakenormal), normalize(surfaceToPointLight)) * 2.0 / length(surfaceToPointLight);
+					if (p_light < 0.0) 
+						p_light = 0.0;
+					point_light += p_light;
+				}
+				
+				float spot_light = dot(normalize(v_spot_surfaceToLight), vec3(0,2,0)); // inverse direction of spotlight
+				float spot_light_power = 0.0;
+				
+				if(spot_light >= 0.98)
+				{
+					spot_light_power = dot(normalize(fakenormal), normalize(v_spot_surfaceToLight));
+					if(spot_light_power < 0.0)
+						spot_light_power = 0.0;
+				}*/
+		
 			vec4 tempColor = texture2D(sampler,v_texcord);
 			if(tempColor.w<1.0)
 			{
