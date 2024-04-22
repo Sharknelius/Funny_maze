@@ -13,8 +13,8 @@ Last modified: 4/24/24
 			precision mediump float;
 		
 			attribute vec4 a_position;	
-			attribute vec3 vert_color;
-			varying vec3 fragColor;		
+			//attribute vec3 vert_color;
+			//varying vec3 fragColor;		
 
 			uniform vec3 transform;
 			uniform vec3 rotation;		
@@ -207,7 +207,7 @@ Last modified: 4/24/24
 				
 				fakenormal = RotateObject(a_position).xyz;
 				
-				fragColor = vert_color;
+				//fragColor = vert_color;
 				vec4 cameraSpace = MoveCamera(worldSpace);
 				
 				gl_Position = ApplyProjection(cameraSpace);
@@ -218,7 +218,7 @@ Last modified: 4/24/24
 		<script id="2dFragmentShader" type="notjs">
 			precision mediump float;
 			
-			varying vec3 fragColor;
+			//varying vec3 fragColor;
 			
 			varying vec3 fakenormal;
 			varying vec3 v_surfaceToLight;
@@ -237,7 +237,7 @@ Last modified: 4/24/24
 			
 			void main()
 			{	
-				float ambient = 0.1;
+				/*float ambient = 0.1;
 					
 				vec3 directional_light_direction = normalize(vec3(20.0, 5.0, 20.0));
 				float d_light = dot(normalize(fakenormal), directional_light_direction * 0.25);
@@ -264,19 +264,19 @@ Last modified: 4/24/24
 					spot_light_power = dot(normalize(fakenormal), normalize(v_spot_surfaceToLight));
 					if(spot_light_power < 0.0)
 						spot_light_power = 0.0;
-				}
+				}*/
 				
 				vec4 tempColor = texture2D(sampler,v_texcord);
 				if(tempColor.w<1.0)
 					discard;
-				//gl_FragColor = vec4(tempColor.z,tempColor.y,tempColor.x,1); 
+				gl_FragColor = vec4(tempColor.z,tempColor.y,tempColor.x,1); 
 				
-				// Total light
+				/*// Total light
 				float total_light = ambient + d_light + point_light + spot_light_power;
 
 				// Final color by combining texture and light
 				vec4 final_color = vec4(tempColor.rgb * total_light, 1.0);
-				gl_FragColor = final_color;
+				gl_FragColor = final_color;*/
 			}
 		</script>
 		
@@ -606,7 +606,7 @@ Last modified: 4/24/24
 			}
 		}
 
-		class Grass extends GameObject //solid
+		/*class Grass extends GameObject //solid
 		{
 			constructor()
 			{
@@ -660,7 +660,7 @@ Last modified: 4/24/24
 
 				gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 			}
-		}
+		}*/
 		
 		class PointLight extends GameObject 
 		{
@@ -770,7 +770,7 @@ Last modified: 4/24/24
 			}
 		}
 		
-		class Goal extends GameObject
+		/*class Goal extends GameObject
 		{
 			constructor()
 			{
@@ -859,7 +859,7 @@ Last modified: 4/24/24
 				if(other.isPlayer == true)
 					m.winText.innerHTML = "YOU ESCAPED THE MAZE";
 			}
-		}
+		}*/
 		
 		</script>
 		
