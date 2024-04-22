@@ -681,6 +681,7 @@ Last modified: 4/24/24
 				this.isTrigger = false;
 				this.collisionRadius = 1;
 				this.buffer=gl.createBuffer();
+				this.health = 3;
 
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
@@ -701,6 +702,10 @@ Last modified: 4/24/24
 				gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,64,64,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(this.MyPicture));
 	
 				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+			}
+			Update()
+			{
+				move();
 			}
 
 			Render(program)
