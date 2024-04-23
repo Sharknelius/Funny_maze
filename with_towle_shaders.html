@@ -12,16 +12,8 @@ Last modified: 4/24/24
 		<script id="2dVertexShader" type="notjs">
 		attribute vec4 a_position;	
 		
-		//!!!!!!!!!!!!!!! Texture change !!!!!!!!!!
-		//We no Longer going to read in colors
-		//attribute vec3 vert_color;
-		//However, we want to send the color to
-		//The fragment Shader
-		//varying vec3 fragColor;
-		//WE need to add varying and attributes for the texture vertex.
 		attribute vec2 texcord;
 		varying vec2 v_texcord;		
-		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!		
 				
 		uniform vec3 transform;
 		uniform vec3 rotation;		
@@ -653,15 +645,114 @@ Last modified: 4/24/24
 					1.0, 1.0, -1.0, -1.0, -1.0,
 					1.0, -1.0, -1.0, -1.0, -0.0
 				];
+		
+				this.MyTexture = gl.createTexture();
+				gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
+				//We only want to do this once.
+				gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,64,64,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(this.MyPicture));
+	
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+			}
 
-				/*this.vertices =
+			Render(program)
+			{
+				var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+				var size = 3;          // 2 components per iteration
+				var type = gl.FLOAT;   // the data is 32bit floats
+				var normalize = false; // don't normalize the data
+		
+				//Make sure you change this to 5 for your TEXTURES
+				var stride = 5*Float32Array.BYTES_PER_ELEMENT;	//Size in bytes of each element     // 0 = move forward size * sizeof(type) each iteration to get the next position
+				var offset = 0;        // start at the beginning of the buffer
+				gl.enableVertexAttribArray(positionAttributeLocation);
+				gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+		
+				var colorAttributeLocation = gl.getAttribLocation(program,"texcord");
+				//We don't have to bind because we already have the correct buffer bound.
+				size = 2;
+				type = gl.FLOAT;
+				normalize = false;
+				stride = 5*Float32Array.BYTES_PER_ELEMENT;	//Size in bytes of each element
+				offset = 3*Float32Array.BYTES_PER_ELEMENT;									//size of the offset
+				gl.enableVertexAttribArray(colorAttributeLocation);
+				gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+				
+				gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
+				//setup S
+				gl.texParameteri(gl.TEXTURE_2D,	gl.TEXTURE_WRAP_S,gl.REPEAT); //gl.MIRRORED_REPEAT//gl.CLAMP_TO_EDGE
+				//Sets up our T
+				gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT); //gl.MIRRORED_REPEAT//gl.CLAMP_TO_EDGE                   
+				gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+				gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);					
+				
+				var tranLoc  = gl.getUniformLocation(program,'transform');
+				gl.uniform3fv(tranLoc,new Float32Array(this.loc));
+				var thetaLoc = gl.getUniformLocation(program,'rotation');
+				gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
+	 
+				//var FaceCamLoc = gl.getUniformLocation(program,'FaceCam');
+				//gl.uniform1i(FaceCamLoc,true);
+				
+				gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length/5);
+		 
+				//gl.uniform1i(FaceCamLoc,false);
+			}
+		}
+		
+		// textured crate
+		class Wall_2 extends GameObject
+		{
+			constructor()
+			{
+				super();
+				this.isTrigger = false;
+				this.collisionRadius = 1.3;
+				this.buffer=gl.createBuffer();
+
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+
+				this.MyPicture = createEnemy(presentCrate);
+				
+				this.vertices =
 				[
-					//X 	Y 	Z   S   T
-					-1,		-1,	0, 0,   1,
-					1,		-1, 0, 1,   1,
-					-1,      1, 0, 0,   0,
-					1,		1,  0, 1,   0
-				];*/
+					1.0, 1.0, -1.0, -1.0, -1.0,
+					-1.0, 1.0, -1.0, -0.0, -1.0,
+					-1.0, 1.0, 1.0, -0.0, -0.0,
+					1.0, 1.0, -1.0, -1.0, -1.0,
+					-1.0, 1.0, 1.0, -0.0, -0.0,
+					1.0, 1.0, 1.0, -1.0, -0.0,
+					1.0, -1.0, 1.0, -1.0, -0.0,
+					1.0, 1.0, 1.0, -1.0, -1.0,
+					-1.0, 1.0, 1.0, -0.0, -1.0,
+					1.0, -1.0, 1.0, -1.0, -0.0,
+					-1.0, 1.0, 1.0, -0.0, -1.0,
+					-1.0, -1.0, 1.0, -0.0, -0.0,
+					-1.0, -1.0, 1.0, -0.0, -0.0,
+					-1.0, 1.0, 1.0, -0.0, -1.0,
+					-1.0, 1.0, -1.0, -1.0, -1.0,
+					-1.0, -1.0, 1.0, -0.0, -0.0,
+					-1.0, 1.0, -1.0, -1.0, -1.0,
+					-1.0, -1.0, -1.0, -1.0, -0.0,
+					-1.0, -1.0, -1.0, -0.0, -1.0,
+					1.0, -1.0, -1.0, -1.0, -1.0,
+					1.0, -1.0, 1.0, -1.0, -0.0,
+					-1.0, -1.0, -1.0, -0.0, -1.0,
+					1.0, -1.0, 1.0, -1.0, -0.0,
+					-1.0, -1.0, 1.0, -0.0, -0.0,
+					1.0, -1.0, -1.0, -1.0, -0.0,
+					1.0, 1.0, -1.0, -1.0, -1.0,
+					1.0, 1.0, 1.0, -0.0, -1.0,
+					1.0, -1.0, -1.0, -1.0, -0.0,
+					1.0, 1.0, 1.0, -0.0, -1.0,
+					1.0, -1.0, 1.0, -0.0, -0.0,
+					-1.0, -1.0, -1.0, -0.0, -0.0,
+					-1.0, 1.0, -1.0, -0.0, -1.0,
+					1.0, 1.0, -1.0, -1.0, -1.0,
+					-1.0, -1.0, -1.0, -0.0, -0.0,
+					1.0, 1.0, -1.0, -1.0, -1.0,
+					1.0, -1.0, -1.0, -1.0, -0.0
+				];
 		
 				this.MyTexture = gl.createTexture();
 				gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
@@ -1371,6 +1462,7 @@ Last modified: 4/24/24
 			return myCrate;
 		}
 		
+		
 		class main
 		{	
 			constructor()
@@ -1402,42 +1494,85 @@ Last modified: 4/24/24
 				gl.uniform1f(tempLoc,.1);
 				tempLoc = gl.getUniformLocation(this.program,'t');
 				gl.uniform1f(tempLoc,.1 * 3/4);
+				
+				// map
+				this.mazeArr = [
+						[1, 1, 0, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], //1 
+						[1, 1, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//2
+						[1, 1, 0, 0, 0, 0, 1, 2, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//3
+						[1, 1, 1, 2, 0, 2, 0, 2, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//4
+						[1, 0, 1, 2, 2, 0, 0, 0, 0, 1, 2, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//5
+						[1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//6
+						[1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],//7
+						[1, 1, 0, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],//8
+						[1, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//9
+						[1, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//10
+						[1, 0, 1, 0, 0, 2, 0, 2, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//11
+						[1, 0, 1, 0, 2, 0, 0, 0, 0, 1, 2, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//12
+						[1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//13
+						[1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//14
+						[1, 1, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//15
+						[0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//16
+						[1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//17
+						[1, 1, 1, 0, 0, 2, 0, 2, 0, 0, 0, 0, 2, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//18
+						[1, 0, 1, 0, 2, 0, 0, 0, 2, 2, 2, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//19
+						[1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],//20
+						[1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//21
+						[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//22
+						[1, 0, 3, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], //23
+						[1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], //24
+						[1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//25
+						[1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//26
+						[1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 2, 1, 1, 1, 1, 2, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//27
+						[1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 2, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//28
+						[1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//29
+						[1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] //30
+					];
 			
 				// Floor
-				//this.CreateObject(0,Grass,[0,-1,0],[0,0,0]);
 				this.CreateObject(0,Ground,[0,-1,0],[0,0,0]);
 				
-				//this.CreateObject(1,Quad,[2,0,2],[0,0,0]);
+				// create maze
+				for(let i =0; i < this.mazeArr.length; i++)
+				{
+					for (let j = 0; j < this.mazeArr[i].length; j++) 
+						{
+							const x = i * 2;
+							const z = j * 2;
+
+							if (this.mazeArr[i][j] === 1)
+								this.CreateObject(1,Wall_1,[x,0,z],[0,0,0]);
+							else if (this.mazeArr[i][j] === 2)
+								this.CreateObject(1,Wall_2,[x,0,z],[0,0,0]);
+							else if (this.mazeArr[i][j] === 3)
+								this.Player = this.CreateObject(1,Camera,[x,0,z],[0,0,0]);
+						}
+				}
 				
-				let space = 0;
+				//this.Player = this.CreateObject(1,Camera,[-6,0,-5],[0,0,0]);
+				//this.CreateObject(1,Wall_1,[1,0,0],[0,0,0]);
+				//this.CreateObject(1,Wall_1,[3,0,0],[0,0,0]);
+				//this.CreateObject(1,Wall_1,[5,0,0],[0,0,0]);
+				
+				/*let space = 0;
 				// walls 1
 				for(let i = 0; i < 30; i++)
 				{
 					space +=2;
 					this.CreateObject(1,Wall_1,[space,0,0],[0,0,0]);
-				}
+				}*/
 				
-				// Player camera
-				this.Player = this.CreateObject(1,Camera,[0,0,0],[0,0,0]);
 				
 				// Create enemies
-				this.CreateObject(1,Enemy1,[-5,0,8],[0,0,0]);
-				this.CreateObject(1,Enemy3,[-7,0,8],[0,0,0]);
-				this.CreateObject(1,Enemy2,[-9,0,8],[0,0,0]);
+				//this.CreateObject(1,Enemy1,[-5,0,8],[0,0,0]);
+				//this.CreateObject(1,Enemy3,[-7,0,8],[0,0,0]);
+				//this.CreateObject(1,Enemy2,[-9,0,8],[0,0,0]);
 				
-				this.CreateObject(1,Bullet,[-11,0,3],[0,0,0]);
 				
 				this.CreateObject(0, PointLight, [1, 0, 1], [0,0,0]);
 				
 				// spot light
 				//this.CreateObject(2, Spotlight, [67, 3, 52], [0,0,0]);
-				
-				// Create goal
-				//let posX = Math.floor((Math.random() * 40) + 30);
-				//let posZ = Math.floor((Math.random() * 98) - 60);
-				
-				//this.CreateObject(2, Goal, [posX, 0, posZ], [0,0,0]);
-				//this.CreateObject(0, PointLight, [posX, 3, posZ], [0,0,0]);
 				
 				function generateRandomPosition() 
 				{
@@ -1504,6 +1639,9 @@ Last modified: 4/24/24
                         return true;
                     else
                         return false;
+						
+				//var distance = Math.sqrt((loc2[0] - loc1[0]) ** 2 + (loc2[1] - loc1[1]) ** 2 + (loc2[2] - loc1[2]) ** 2);
+				//return distance < (rad1 + rad2);
 			}
 			
 			CreateObject(type, prefab, loc, rot)
