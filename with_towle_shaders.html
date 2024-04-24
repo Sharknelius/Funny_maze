@@ -42,59 +42,98 @@ Last modified: 4/24/24
 		//Bad guy spotlight location
 		uniform vec3 BadGuyLoc;
 		
-		vec4 MoveCamera(vec4 pos)
-		{
-			vec3 cw = cos(cameraRotation);
-			vec3 sw = sin(cameraRotation);
-			mat4 translateView = mat4(1.0,0.0,0.0,0.0,
-									  0.0,1.0,0.0,0.0,
-									  0.0,0.0,1.0,0.0,
-									  -1.0*cameraLoc.x,-1.0*cameraLoc.y,cameraLoc.z,1.0
-									);
-						
-			mat4 rotateView = mat4(cw.y,0.0,-1.0*sw.y,0.0,
-									0.0,1.0,0.0,0.0,
-									sw.y,0.0,cw.y,0.0,
-									0.0,0.0,0.0,1.0);
-			return rotateView*translateView*pos;
-		}
-		
-		vec4 ApplyProjection(vec4 pos)
-		{
-			mat4 SimpleOrtho = mat4  (1,0.0,0.0,0.0,
-							 0.0,1,0.0,0.0, 
-							 0.0,0.0,1,0.0, 
-							 0.0,0.0,0.0,1.0);
-
-			mat4 ComplexPerspective = mat4(
-										n/r, 0.0,0.0,0.0,
-										0.0, n/t,0.0,0.0,
-										0.0,0.0,-1.0*(f+n)/(f-n),-1.0,
-										0.0,0.0,-2.0*f*n/(f-n),0.0
-										);
-			mat4 ComplexOrtho = mat4(	1.0/r,0.0,0.0,0.0,
-										0.0,1.0/t,0.0,0.0,	//If I make the y -1.0/t I will invert the Y-axis.
-										0.0,0.0,1.0,0.0,
-										0.0,0.0,0.0,1.0	//If I make the x and y translate -1, -1 I can put 0,0 in the bottom right.
-									);
-									
-			mat4 SimplePerspective = 	mat4(
-								1.0,0.0,0.0,0.0,
-								0.0,1.0,0.0,0.0,
-								0.0,0.0,-1.0,-1.0,
-								0.0,0.0,-2.0,0.0			
-								);
-			return ComplexPerspective*pos;
-		}
-		
 		vec4 PositionObject(vec4 pos)
-		{
-			mat4 translateM = mat4(1.0,0.0,0.0,0.0,
-						   0.0,1.0,0.0,0.0,
-						   0.0,0.0,1.0,0.0,
-						   transform.x,transform.y,transform.z,1.0);
-			return translateM*pos;	
-		}
+			{
+				mat4 translateM = mat4(1.0,0.0,0.0,0.0,
+							0.0,1.0,0.0,0.0,
+							0.0,0.0,1.0,0.0,
+							transform.x,transform.y,transform.z,1.0);
+				return translateM*pos;	
+			}
+			
+			vec4 RotateObject (vec4 pos)
+			{
+				vec3 c = cos(rotation);
+				vec3 s = sin(rotation);
+				mat4 rotateX = mat4 (
+					1.0,	0.0,	0.0,	0.0,
+					0.0,	c.x,	s.x,	0.0,
+					0.0,	-1.0*s.x,	c.x,	0.0,
+					0.0,	0.0,	0.0,	1.0
+				);
+
+				mat4 rotateY = mat4(
+					c.y,	0.0,	-1.0*s.y,	0.0,
+					0.0,	1.0,	0.0,	0.0,
+					s.y,	0.0,	c.y,	0.0,
+					0.0,	0.0,	0.0,	1.0
+				);
+
+				mat4 rotateZ = mat4(
+				c.z,	s.z,	0.0,	0.0,
+				-1.0*s.z,	c.z,	0.0,	0.0,
+				0.0,	0.0,	1.0,	0.0,
+				0.0,	0.0,	0.0,	1.0
+				);
+
+				return rotateX * rotateY * rotateZ * pos;
+			}		
+
+			vec4 MoveCamera(vec4 pos)
+			{
+				vec3 cw = cos(cameraRotation);
+				vec3 sw = sin(cameraRotation);
+				
+				mat4 translateView = mat4(
+							1.0,0.0,0.0,0.0,
+							0.0,1.0,0.0,0.0,
+							0.0,0.0,-1.0,0.0,
+							-1.0*cameraLoc.x,-1.0*cameraLoc.y,cameraLoc.z,1.0
+							);
+							
+				mat4 rotateYView = mat4(
+							cw.y,0.0,-1.0*sw.y,0.0,
+							0.0,1.0,0.0,0.0,
+							sw.y,0.0,cw.y,0.0,
+							0.0,0.0,0.0,1.0
+							);
+										
+				mat4 rotateXView = mat4(
+							1.0,	0.0,		0.0,	0.0,
+							0.0,	cw.x,		sw.x,	0.0,
+							0.0,	-1.0*sw.x, 	cw.x,	0.0,
+							0.0,	0.0,		0.0,	1.0
+									);
+				
+				mat4 rotateZView = mat4(
+							cw.z,		sw.z,		0.0,	0.0,
+							-1.0*sw.z, 	cw.z,		0.0,	0.0,
+							0.0,		0.0,		1.0,	0.0,
+							0.0,		0.0,		0.0,	1.0
+									);		
+				return rotateXView*rotateYView*rotateZView*translateView*pos;
+			}
+			
+			vec4 ApplyProjection(vec4 pos)
+			{
+			
+				mat4 ComplexPerspective = mat4(
+					n/r, 0.0,0.0,0.0,
+					0.0, n/t,0.0,0.0,
+					0.0, 0.0, -1.0*(f+n)/(f-n), -1.0,
+					0.0, 0.0, -2.0*f*n/(f-n), 0.0
+					);
+											
+				mat4 ComplexOrtho = mat4(	
+					1.0/r, 0.0, 0.0, 0.0,
+					0.0, 1.0/t, 0.0, 0.0,	
+					0.0, 0.0, 1.0, 0.0,
+					-1.0, 1.0, 0.0, 1.0	
+					);
+								
+				//Choose which projection you want here:  Perspective or Orthographic			
+				return ComplexPerspective*pos;
+			}					
 		
 		vec4 LookAt(vec3 F, vec3 U, vec4 pos)
 		{
@@ -107,23 +146,7 @@ Last modified: 4/24/24
 					
 			return LookAt*pos;	
 		}
-		//Use a function to Rotate the object
-		vec4 RotateObject(vec4 pos)
-		{
-			//This is a nice trick
-			vec3 c = cos(rotation);
-			vec3 s = sin(rotation);
-			
-			//Surprise!  we have to go column firt when we enter the matrix.
-
-			//mat4 rotateX = mat4();
-			mat4 rotateY = mat4(c.y,0.0,-1.0*s.y,0.0,
-								0.0,1.0,0.0,0.0,
-								s.y,0.0,c.y,0.0,
-								0.0,0.0,0.0,1.0);
-			//mat4 rotateZ = mat4();
-			return rotateY*pos;
-		}
+		
 		void main()
 		{
 			if(length(a_position)<5.0)
@@ -173,10 +196,8 @@ Last modified: 4/24/24
 		uniform vec3 p_lightPos[10];
 		varying vec3 v_surfacePos;
 		
-		//!!!!!!!!!!!!!!!!Texture change !!!!!!!!!!!!!!!
 		varying vec2 v_texcord;
 		uniform sampler2D sampler;
-		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		
 		void main()
 		{
@@ -330,8 +351,10 @@ Last modified: 4/24/24
 				
 				this.isTrigger = false;
 				this.isPlayer = false;
+				this.isEnemy = false;
 				this.isBullet = false;
 				this.doDestroy = false;
+				this.isBad = false;
 				
 				this.collisionRadius = 0.1;
 				this.velocity = [0,0,0];
@@ -420,19 +443,13 @@ Last modified: 4/24/24
 			}
 			Update()
 			{
-				if(this.health <= 0)
-				{
-					
-				}
 				
 				if("L" in m.Keys && m.Keys["L"])
 				{
-					//this.angVelocity[1] -=.01;
 					this.rot[1] +=.02;
 				}
 				if("J" in m.Keys && m.Keys["J"]) 
 				{
-					//this.angVelocity[1] +=.01;
 					this.rot[1] -=.02;
 				}
 				
@@ -440,7 +457,7 @@ Last modified: 4/24/24
 				if("W" in m.Keys && m.Keys["W"])
 				{
 					this.transform.dorotations(this.rot);
-					for(let i =0; i <3; i ++)
+					for(let i =0; i < 3; i ++)
 					{
 						this.velocity[i] = this.transform.forward[i]*.04;
 					}
@@ -448,7 +465,7 @@ Last modified: 4/24/24
 				if("S" in m.Keys && m.Keys["S"])
 				{
 					this.transform.dorotations(this.rot);
-					for(let i =0; i <3; i ++)
+					for(let i =0; i < 3; i ++)
 					{
 						this.velocity[i] = this.transform.forward[i]*-.04;
 					}
@@ -457,7 +474,7 @@ Last modified: 4/24/24
 				if("A" in m.Keys && m.Keys["A"])
 				{
 					this.transform.dorotations(this.rot);
-					for(let i =0; i <3; i ++)
+					for(let i =0; i < 3; i ++)
 					{
 						this.velocity[i] = this.transform.right[i]*-.04;
 					}
@@ -465,9 +482,27 @@ Last modified: 4/24/24
 				if("D" in m.Keys && m.Keys["D"])
 				{
 					this.transform.dorotations(this.rot);
-					for(let i =0; i <3; i ++)
+					for(let i =0; i < 3; i ++)
 					{
 						this.velocity[i] = this.transform.right[i]*.04;
+					}
+				}
+				
+				// Up and down
+				if("Z" in m.Keys && m.Keys["Z"])
+				{
+					this.transform.dorotations(this.rot);
+					for(let i =0; i < 3; i ++)
+					{
+						this.velocity[i] = this.transform.up[i]*.02
+					}
+				}
+				if("X" in m.Keys && m.Keys["X"])
+				{
+					this.transform.dorotations(this.rot);
+					for(let i =0; i < 3; i ++)
+					{
+						this.velocity[i] = this.transform.up[i]* -.02
 					}
 				}
 				
@@ -481,9 +516,9 @@ Last modified: 4/24/24
 				{	
 					this.transform.dorotations(this.rot);
 					var bulletStartPos = [
-						this.loc[0] + this.transform.forward[0] * 0.5, // Offset the bullet start position to be in front of the camera
-						this.loc[1] + this.transform.forward[1] * 0.5,
-						this.loc[2] + this.transform.forward[2] * 0.5,
+						this.loc[0] + this.transform.forward[0] * 0.6, // Offset the bullet start position to be in front of the camera
+						this.loc[1] + this.transform.forward[1] * 0.6,
+						this.loc[2] - this.transform.forward[2] * 0.6,
 					];
 					
 					var bullet = m.CreateObject(2, Bullet, bulletStartPos, [0,0,0]);
@@ -492,9 +527,9 @@ Last modified: 4/24/24
 						bullet.rot[i] = this.rot[i];
 					}
 					
-					bullet.velocity[0] = this.transform.forward[0] * 0.01;
-					bullet.velocity[1] = this.transform.forward[1] * 0.01;
-					bullet.velocity[2] = this.transform.forward[2] * 0.01;
+					bullet.velocity[0] = this.transform.forward[0] * 0.05;
+					bullet.velocity[1] = this.transform.forward[1] * 0.05;
+					bullet.velocity[2] = this.transform.forward[2] * 0.05;
 					
 					this.coolDown = 30;
 				}
@@ -502,13 +537,11 @@ Last modified: 4/24/24
 			
 			Render(program)
 			{
-				
 				var camLoc = gl.getUniformLocation(program, 'cameraLoc');
 				gl.uniform3fv(camLoc, new Float32Array(this.loc));
 				
 				var cameraLoc = gl.getUniformLocation(program, 'cameraRotation');
 				gl.uniform3fv(cameraLoc, new Float32Array(this.rot));
-
 			}
 		}
 		// textured crate
@@ -592,15 +625,15 @@ Last modified: 4/24/24
 		}
 		
 		// wall1
-		// textured crate
 		class Wall_1 extends GameObject
 		{
 			constructor()
 			{
 				super();
 				this.isTrigger = false;
-				this.collisionRadius = 1.3;
+				this.collisionRadius = 1.2;
 				this.buffer=gl.createBuffer();
+				this.isWall = true;
 
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
@@ -690,13 +723,8 @@ Last modified: 4/24/24
 				gl.uniform3fv(tranLoc,new Float32Array(this.loc));
 				var thetaLoc = gl.getUniformLocation(program,'rotation');
 				gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
-	 
-				//var FaceCamLoc = gl.getUniformLocation(program,'FaceCam');
-				//gl.uniform1i(FaceCamLoc,true);
 				
 				gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length/5);
-		 
-				//gl.uniform1i(FaceCamLoc,false);
 			}
 		}
 		
@@ -707,8 +735,9 @@ Last modified: 4/24/24
 			{
 				super();
 				this.isTrigger = false;
-				this.collisionRadius = 1.3;
+				this.collisionRadius = 1.2;
 				this.buffer=gl.createBuffer();
+				this.isWall = true;
 
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
@@ -798,13 +827,8 @@ Last modified: 4/24/24
 				gl.uniform3fv(tranLoc,new Float32Array(this.loc));
 				var thetaLoc = gl.getUniformLocation(program,'rotation');
 				gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
-	 
-				//var FaceCamLoc = gl.getUniformLocation(program,'FaceCam');
-				//gl.uniform1i(FaceCamLoc,true);
 				
 				gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length/5);
-		 
-				//gl.uniform1i(FaceCamLoc,false);
 			}
 		}
 		
@@ -814,8 +838,10 @@ Last modified: 4/24/24
 			constructor()
 			{
 				super();
-				this.isTrigger = false;
-				this.collisionRadius = 1;
+				this.velocity = [0.0, 0.0, 0.04];
+				this.isEnemy = true;
+				//this.isTrigger = true;
+				this.collisionRadius = 0.1;
 				this.buffer=gl.createBuffer();
 				this.health = 3;
 
@@ -841,7 +867,19 @@ Last modified: 4/24/24
 			}
 			Update()
 			{
-				//this.Move();
+				// if enemy is alive
+				if(this.health <= 0)
+				{
+					this.doDestroy = true;
+					m.DestroyObject(this.id);
+				}
+				else
+				{
+					let randomNum = Math.floor(Math.random() * 1000);
+					if(randomNum < 500) // 50% chance bonnie changes direction
+					this.velocity[2] = -this.velocity[2];
+					this.Move();
+				}
 			}
 
 			Render(program)
@@ -888,6 +926,17 @@ Last modified: 4/24/24
 		 
 				//gl.uniform1i(FaceCamLoc,false);
 			}
+			onCollisionEnter(other)
+			{
+				if(other.isPlayer)
+				{
+					other.doDestroy = true;
+					m.DestroyObject(other.id);
+					m.Player = m.CreateObject(1,Camera,[xPlayer,0,zPlayer],[0,0,0]);
+				}
+				else if(other.isWall)
+					this.velocity[2] = -this.velocity[2];
+			}
 		}
 		
 		//enemy 2 chica
@@ -896,9 +945,12 @@ Last modified: 4/24/24
 			constructor()
 			{
 				super();
-				this.isTrigger = false;
-				this.collisionRadius = 1;
+				this.isEnemy = true;
+				//this.isTrigger = true;
+				this.velocity = [0, 0, 0.04];
+				this.collisionRadius = 0.1;
 				this.buffer=gl.createBuffer();
+				this.health = 8;
 
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
@@ -920,7 +972,17 @@ Last modified: 4/24/24
 	
 				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 			}
-
+			Update()
+			{
+				// if enemy is alive
+				if(this.health <= 0)
+				{
+					this.doDestroy = true;
+					m.DestroyObject(this.id);
+				}
+				else
+					this.Move();
+			}
 			Render(program)
 			{
 				var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
@@ -957,14 +1019,24 @@ Last modified: 4/24/24
 				gl.uniform3fv(tranLoc,new Float32Array(this.loc));
 				var thetaLoc = gl.getUniformLocation(program,'rotation');
 				gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
-	 
-				//var FaceCamLoc = gl.getUniformLocation(program,'FaceCam');
-				//gl.uniform1i(FaceCamLoc,true);
 
 				gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-		 
-				//gl.uniform1i(FaceCamLoc,false);
 			}
+			onCollisionEnter(other)
+			{
+				if(this.isWall) // change direction when hitting a wall
+				{
+					this.velocity[2] = -this.velocity[2];
+					console.log("Chica hit a wall");
+				}
+				else if(other.isPlayer)
+				{
+					other.doDestroy = true;
+					m.DestroyObject(other.id);
+					m.Player = m.CreateObject(1,Camera,[xPlayer,0,zPlayer],[0,0,0]);
+				}
+			}
+			
 		}
 		
 		//enemy 3 freddy
@@ -973,9 +1045,12 @@ Last modified: 4/24/24
 			constructor()
 			{
 				super();
-				this.isTrigger = false;
-				this.collisionRadius = 1;
+				this.isEnemy = true;
+				//this.isTrigger = true;
+				this.collisionRadius = 0.1;
 				this.buffer=gl.createBuffer();
+				this.velocity = [0.04, 0, 0.04];
+				this.health = 5;
 
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
@@ -992,10 +1067,48 @@ Last modified: 4/24/24
 		
 				this.MyTexture = gl.createTexture();
 				gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
-				//We only want to do this once.
 				gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,64,64,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(this.MyPicture));
 	
 				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+			}
+			Update()
+			{
+				// if enemy is alive
+				if(this.health <= 0)
+				{
+					this.doDestroy = true;
+					m.DestroyObject(this.id);
+				}
+				else
+				{
+					let randomNum = Math.floor(Math.random() * 1000);
+					if(randomNum < 100) 
+						this.velocity[2] = -this.velocity[2];
+					if(randomNum > 800)
+						this.velocity[0] = -this.velocity[0];
+					this.Move();
+					
+					this.randNum = Math.floor(Math.random() * 500);
+					if(this.randNum < 2) // enemy randomly shoots bad bullet
+					{
+						this.transform.dorotations(this.rot);
+						var bulletStartPos = [
+							this.loc[0] + this.transform.forward[0] * 0.6, // Offset the bullet start position to be in front of the camera
+							this.loc[1] + this.transform.forward[1] * 0.6,
+							this.loc[2] - this.transform.forward[2] * 0.6,
+						];
+						
+						var bullet = m.CreateObject(2, BadBullet, bulletStartPos, [0,0,0]);
+						for(let i = 0; i < 3; i++)
+						{
+							bullet.rot[i] = this.rot[i];
+						}
+						
+						bullet.velocity[0] = this.transform.forward[0] * -0.05;
+						bullet.velocity[1] = this.transform.forward[1] * -0.05;
+						bullet.velocity[2] = this.transform.forward[2] * -0.05;
+					}
+				}
 			}
 
 			Render(program)
@@ -1035,12 +1148,21 @@ Last modified: 4/24/24
 				var thetaLoc = gl.getUniformLocation(program,'rotation');
 				gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
 	 
-				//var FaceCamLoc = gl.getUniformLocation(program,'FaceCam');
-				//gl.uniform1i(FaceCamLoc,true);
+				var FaceCamLoc = gl.getUniformLocation(program,'FaceCam');
+				gl.uniform1i(FaceCamLoc,true);
 
 				gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 		 
-				//gl.uniform1i(FaceCamLoc,false);
+				gl.uniform1i(FaceCamLoc,false);
+			}
+			onCollisionEnter(other)
+			{
+				if(other.isPlayer)
+				{
+					other.doDestroy = true;
+					m.DestroyObject(other.id);
+					m.Player = m.CreateObject(1,Camera,[xPlayer,0,zPlayer],[0,0,0]);
+				}
 			}
 		}
 		
@@ -1116,8 +1238,7 @@ Last modified: 4/24/24
 			constructor()
 			{
 				super();
-				console.log("bullet shot");
-				this.velocity = [0.03,0.03,0.3];
+				this.velocity = [0.05,0.05,0.05];
 				this.isBullet = true;
 				this.isTrigger = true;
 				this.coolDown = 0;
@@ -1141,7 +1262,6 @@ Last modified: 4/24/24
 				gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,16,16,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(this.MyPicture));
 	
 				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
-				
 			}
 			
 			Update()
@@ -1152,7 +1272,7 @@ Last modified: 4/24/24
 					this.coolDown++;
 				}
 				else
-				{ // For some reason, is being destroyed immediately
+				{ 
 					this.doDestroy = true;
 					m.DestroyObject(this.id);
 				}
@@ -1205,7 +1325,131 @@ Last modified: 4/24/24
 			
 			onTriggerEnter(other)
 			{
+				if(other.isEnemy)
+				{
+					other.health--;
+					console.log("Hit enemy with health " + other.health);
+					this.doDestroy = true;
+					m.DestroyObject(this.id);
+				}
+				else if(other.isWall)
+				{ // let's see what this does
+					this.doDestroy = true;
+					m.DestroyObject(this.id);
+				}
+			}
+		}
+		
+		class BadBullet extends GameObject
+		{
+			constructor()
+			{
+				super();
+				this.velocity = [0.05,0.05,0.05];
+				this.isBullet = true;
+				this.isTrigger = true;
+				this.coolDown = 0;
+				this.buffer=gl.createBuffer();
 
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+
+				this.MyPicture = createBullet(bulletSprite);
+
+				this.vertices =
+				[
+					//X 	Y 	Z   S   T
+					-1,		-1,	0, 0,   1,
+					1,		-1, 0, 1,   1,
+					-1,      1, 0, 0,   0,
+					1,		1,  0, 1,   0
+				];
+		
+				this.MyTexture = gl.createTexture();
+				gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
+				gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,16,16,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(this.MyPicture));
+	
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+			}
+			
+			Update()
+			{
+				if(this.coolDown < 180)
+				{
+					this.Move();
+					this.coolDown++;
+				}
+				else
+				{ 
+					this.doDestroy = true;
+					m.DestroyObject(this.id);
+				}
+			}
+			
+			Render(program)
+			{
+				var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+				var size = 3;          // 2 components per iteration
+				var type = gl.FLOAT;   // the data is 32bit floats
+				var normalize = false; // don't normalize the data
+		
+				//Make sure you change this to 5 for your TEXTURES
+				var stride = 5*Float32Array.BYTES_PER_ELEMENT;	//Size in bytes of each element     // 0 = move forward size * sizeof(type) each iteration to get the next position
+				var offset = 0;        // start at the beginning of the buffer
+				gl.enableVertexAttribArray(positionAttributeLocation);
+				gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+		
+				var colorAttributeLocation = gl.getAttribLocation(program,"texcord");
+				//We don't have to bind because we already have the correct buffer bound.
+				size = 2;
+				type = gl.FLOAT;
+				normalize = false;
+				stride = 5*Float32Array.BYTES_PER_ELEMENT;	//Size in bytes of each element
+				offset = 3*Float32Array.BYTES_PER_ELEMENT;									//size of the offset
+				gl.enableVertexAttribArray(colorAttributeLocation);
+				gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+				
+				gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
+				//setup S
+				gl.texParameteri(gl.TEXTURE_2D,	gl.TEXTURE_WRAP_S,gl.REPEAT); //gl.MIRRORED_REPEAT//gl.CLAMP_TO_EDGE
+				//Sets up our T
+				gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT); //gl.MIRRORED_REPEAT//gl.CLAMP_TO_EDGE                   
+				gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+				gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);					
+				
+				var tranLoc  = gl.getUniformLocation(program,'transform');
+				gl.uniform3fv(tranLoc,new Float32Array(this.loc));
+				var thetaLoc = gl.getUniformLocation(program,'rotation');
+				gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
+	 
+				//var FaceCamLoc = gl.getUniformLocation(program,'FaceCam');
+				//gl.uniform1i(FaceCamLoc,true);
+
+				gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+		 
+				//gl.uniform1i(FaceCamLoc,false);
+			}
+			
+			onTriggerEnter(other)
+			{
+				if(other.isPlayer)
+				{
+					other.health--;
+					console.log("Hit player with health " + other.health);
+					if(other.health <= 0) // destroy and respawn player
+					{
+						other.doDestroy = true;
+						m.DestroyObject(other.id);
+						m.Player = m.CreateObject(1,Camera,[xPlayer,0,zPlayer],[0,0,0]);
+					}
+					this.doDestroy = true;
+					m.DestroyObject(this.id);
+				}
+				else if(other.isWall)
+				{ // let's see what this does
+					this.doDestroy = true;
+					m.DestroyObject(this.id);
+				}
 			}
 		}
 		
@@ -1238,84 +1482,6 @@ Last modified: 4/24/24
 			}
 		}
 		
-		class Spotlight extends GameObject 
-		{
-			constructor() 
-			{
-				super();
-				this.isTrigger = true;
-				
-				this.loc = [0,0,0];
-				this.rot = [Math.PI/2, 0, 0]; 
-				this.direction = this.directionFromRotation(this.rot);
-				this.angle = Math.PI / 4; 
-				this.collisionRadius = 5;
-
-				this.velocity[0] = 0.5;
-				this.velocity[1] = 0
-				this.velocity[2] = 0.5;
-			}
-
-			directionFromRotation(rot) 
-			{
-				const pitch = rot[0];
-				const yaw = rot[1];
-	  
-				const x = Math.cos(pitch) * Math.cos(yaw);
-				const y = Math.sin(pitch);
-				const z = Math.cos(pitch) * Math.sin(yaw);
-	  
-				return [x, y, z];
-			}
-			
-			setUniforms(gl, program) 
-			{
-				const spotlightPositionLocation = gl.getUniformLocation(program, "v_spot_light_pos");
-				const spotlightDirectionLocation = gl.getUniformLocation(program, "v_spot_light_direction");
-
-				gl.uniform3fv(spotlightPositionLocation, new Float32Array(this.loc));
-				gl.uniform3fv(spotlightDirectionLocation, new Float32Array(this.direction));
-			}
-			Update() 
-			{
-				// Update position based on velocity
-				for (let i = 0; i < 3; i++) 
-				{
-					this.loc[i] += this.velocity[i];
-				}
-    
-				// Randomly change direction 5% of time each frame
-				if (Math.random() < 0.05) 
-				{
-					this.velocity[0] = Math.random() * 0.5 - 0.25; 
-					this.velocity[2] = Math.random() * 0.5 - 0.25;
-				}
-    
-				// Change direction if out of bounds (-80 to 80)
-				if (this.loc[0] < -80 || this.loc[0] > 80) 
-					this.velocity[0] = -this.velocity[0];
-				if (this.loc[2] < -80 || this.loc[2] > 80) 
-					this.velocity[2] = -this.velocity[2];
-			}
-  
-			Render(program) 
-			{
-				this.setUniforms(gl, program);
-			}
-			
-			onTriggerEnter(other)
-			{
-				if(other.isPlayer == true)
-				{
-					// Spotlight will catch player and reset them
-					console.log("Touching player");
-				
-					other.doDestroy = true;
-					m.DestroyObject(other.id);
-					m.Player = m.CreateObject(1,Camera,[0,0,0],[0,0,0]);
-				}
-			}
-		}
 		
 		/*class Goal extends GameObject
 		{
@@ -1462,6 +1628,8 @@ Last modified: 4/24/24
 			return myCrate;
 		}
 		
+		var xPlayer = 0;
+		var zPlayer = 0;
 		
 		class main
 		{	
@@ -1498,31 +1666,31 @@ Last modified: 4/24/24
 				// map
 				this.mazeArr = [
 						[1, 1, 0, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], //1 
-						[1, 1, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//2
+						[1, 1, 7, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 7, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//2
 						[1, 1, 0, 0, 0, 0, 1, 2, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//3
 						[1, 1, 1, 2, 0, 2, 0, 2, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//4
 						[1, 0, 1, 2, 2, 0, 0, 0, 0, 1, 2, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//5
 						[1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//6
-						[1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],//7
-						[1, 1, 0, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],//8
-						[1, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//9
-						[1, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//10
-						[1, 0, 1, 0, 0, 2, 0, 2, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//11
-						[1, 0, 1, 0, 2, 0, 0, 0, 0, 1, 2, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//12
-						[1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//13
-						[1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//14
-						[1, 1, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//15
-						[0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//16
-						[1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//17
-						[1, 1, 1, 0, 0, 2, 0, 2, 0, 0, 0, 0, 2, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//18
-						[1, 0, 1, 0, 2, 0, 0, 0, 2, 2, 2, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//19
-						[1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],//20
-						[1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//21
-						[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//22
-						[1, 0, 3, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], //23
-						[1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], //24
-						[1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//25
-						[1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//26
+						[1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 0, 0, 6, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],//7
+						[1, 1, 0, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 7, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],//8
+						[1, 0, 0, 2, 1, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],//9
+						[1, 0, 0, 0, 0, 0, 1, 2, 1, 7, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],//10
+						[1, 0, 1, 0, 0, 2, 0, 2, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],//11
+						[1, 7, 1, 0, 2, 0, 0, 0, 0, 1, 2, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1],//12
+						[1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1],//13
+						[1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1],//14
+						[1, 1, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1],//15
+						[1, 0, 0, 2, 1, 0, 0, 0, 0, 7, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1],//16
+						[1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 2, 2, 0, 0, 0, 0, 0, 4, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1],//17
+						[1, 1, 1, 0, 0, 2, 0, 2, 0, 0, 0, 0, 2, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1],//18
+						[1, 0, 1, 0, 2, 0, 0, 0, 2, 2, 2, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1],//19
+						[1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 7, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1],//20
+						[1, 2, 2, 2, 2, 1, 1, 1, 0, 7, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1],//21
+						[2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1],//22
+						[2, 0, 3, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1], //23
+						[2, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1], //24
+						[2, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1],//25
+						[1, 2, 2, 0, 2, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 7, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1],//26
 						[1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 2, 1, 1, 1, 1, 2, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//27
 						[1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 2, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//28
 						[1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//29
@@ -1532,64 +1700,57 @@ Last modified: 4/24/24
 				// Floor
 				this.CreateObject(0,Ground,[0,-1,0],[0,0,0]);
 				
+				//Ceiling
+				this.CreateObject(0,Ground,[0,2.5,0],[0,0,0]);
+				
 				// create maze
 				for(let i =0; i < this.mazeArr.length; i++)
 				{
 					for (let j = 0; j < this.mazeArr[i].length; j++) 
-						{
-							const x = i * 2;
-							const z = j * 2;
+					{
+						const x = i * 2;
+						const z = j * 2;
 
-							if (this.mazeArr[i][j] === 1)
-								this.CreateObject(1,Wall_1,[x,0,z],[0,0,0]);
-							else if (this.mazeArr[i][j] === 2)
-								this.CreateObject(1,Wall_2,[x,0,z],[0,0,0]);
-							else if (this.mazeArr[i][j] === 3)
-								this.Player = this.CreateObject(1,Camera,[x,0,z],[0,0,0]);
+						if (this.mazeArr[i][j] === 1)
+							this.CreateObject(1,Wall_1,[x,0,z],[0,0,0]);
+						else if (this.mazeArr[i][j] === 2)
+							this.CreateObject(1,Wall_2,[x,0,z],[0,0,0]);
+						else if (this.mazeArr[i][j] === 3)
+						{
+							this.CreateObject(0, PointLight, [x, 0, z], [0,0,0]);
+							this.Player = this.CreateObject(1,Camera,[x,0,z],[0,0,0]);
+							xPlayer = x;
+							zPlayer = z;
 						}
+						else if (this.mazeArr[i][j] === 4)
+							this.CreateObject(1,Enemy1,[x,0,z],[0,0,0]);
+						else if (this.mazeArr[i][j] === 5)
+							this.CreateObject(1,Enemy2,[x,0,z],[0,0,0]);
+						else if (this.mazeArr[i][j] === 6)
+							this.CreateObject(1,Enemy3,[x,0,z],[0,0,0]);
+					}
 				}
 				
-				//this.Player = this.CreateObject(1,Camera,[-6,0,-5],[0,0,0]);
-				//this.CreateObject(1,Wall_1,[1,0,0],[0,0,0]);
-				//this.CreateObject(1,Wall_1,[3,0,0],[0,0,0]);
-				//this.CreateObject(1,Wall_1,[5,0,0],[0,0,0]);
-				
-				/*let space = 0;
-				// walls 1
-				for(let i = 0; i < 30; i++)
+				for(let i =0; i < this.mazeArr.length; i++)
 				{
-					space +=2;
-					this.CreateObject(1,Wall_1,[space,0,0],[0,0,0]);
-				}*/
-				
-				
-				// Create enemies
-				//this.CreateObject(1,Enemy1,[-5,0,8],[0,0,0]);
-				//this.CreateObject(1,Enemy3,[-7,0,8],[0,0,0]);
-				//this.CreateObject(1,Enemy2,[-9,0,8],[0,0,0]);
-				
-				
-				this.CreateObject(0, PointLight, [1, 0, 1], [0,0,0]);
-				
-				// spot light
-				//this.CreateObject(2, Spotlight, [67, 3, 52], [0,0,0]);
-				
-				function generateRandomPosition() 
-				{
-					let value = (Math.random() * 20) + 30; // Generates a random number between 30 and 50
-					// 50% chance of value being positive or negative
-					if (Math.random() < 0.5) 
-						return value; 
-					else 
-						return -value; 
-				}
-				
-				// Create point lights
-				for(let i = 0; i < 9; i++)
-				{
-					let posX = generateRandomPosition();
-					let posZ = generateRandomPosition();
-					this.CreateObject(0, PointLight, [posX, 0, posZ], [0,0,0]);
+					for (let j = 0; j < this.mazeArr[i].length; j++) 
+					{
+						const x = i * 2;
+						const z = j * -2;
+
+						if (this.mazeArr[i][j] === 1)
+							this.CreateObject(0,Wall_1,[x,0,z],[0,0,0]);
+						else if (this.mazeArr[i][j] === 2)
+							this.CreateObject(0,Wall_2,[x,0,z],[0,0,0]);
+						else if (this.mazeArr[i][j] === 4)
+							this.CreateObject(1,Enemy1,[x,0,z],[0,0,0]);
+						else if (this.mazeArr[i][j] === 5)
+							this.CreateObject(1,Enemy2,[x,0,z],[0,0,0]);
+						else if (this.mazeArr[i][j] === 6)
+							this.CreateObject(1,Enemy3,[x,0,z],[0,0,0]);
+						else if (this.mazeArr[i][j] === 7)
+							this.CreateObject(0,PointLight,[x,0,z],[0,0,0]);
+					}
 				}
 				
 			}
@@ -1612,7 +1773,7 @@ Last modified: 4/24/24
 
 			RenderAll()
 			{
-				gl.clearColor(0.0, 0.1, 0.3, 1.0);
+				gl.clearColor(0.0, 0.0, 0.1, 1.0);
                 gl.clear(gl.COLOR_BUFFER_BIT);
 				
 				
@@ -1639,9 +1800,6 @@ Last modified: 4/24/24
                         return true;
                     else
                         return false;
-						
-				//var distance = Math.sqrt((loc2[0] - loc1[0]) ** 2 + (loc2[1] - loc1[1]) ** 2 + (loc2[2] - loc1[2]) ** 2);
-				//return distance < (rad1 + rad2);
 			}
 			
 			CreateObject(type, prefab, loc, rot)
