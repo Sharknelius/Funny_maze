@@ -226,21 +226,12 @@ Last modified: 4/24/24
 				point_light += p_light;
 			}
 				
-			/*float spot_light = dot(normalize(v_spot_surfaceToLight), vec3(0,2,0)); // inverse direction of spotlight
-			float spot_light_power = 0.0;
-				
-			if(spot_light >= 0.98)
-			{
-				spot_light_power = dot(normalize(fakenormal), normalize(v_spot_surfaceToLight));
-				if(spot_light_power < 0.0)
-					spot_light_power = 0.0;
-			}*/
+
 			
 			float totalLight = ambient + point_light + d_light*0.25;
 		
 			vec3 fragColor = vec3(tempColor.z, tempColor.y, tempColor.x);
-            gl_FragColor = vec4(fragColor*(totalLight), 1);
-			//gl_FragColor = vec4(tempZ,tempY,tempX,1); 
+            gl_FragColor = vec4(fragColor*(totalLight), 1); 
 			
 		}
 		</script>
@@ -485,24 +476,6 @@ Last modified: 4/24/24
 					for(let i =0; i < 3; i ++)
 					{
 						this.velocity[i] = this.transform.right[i]*.04;
-					}
-				}
-				
-				// Up and down
-				if("Z" in m.Keys && m.Keys["Z"])
-				{
-					this.transform.dorotations(this.rot);
-					for(let i =0; i < 3; i ++)
-					{
-						this.velocity[i] = this.transform.up[i]*.02
-					}
-				}
-				if("X" in m.Keys && m.Keys["X"])
-				{
-					this.transform.dorotations(this.rot);
-					for(let i =0; i < 3; i ++)
-					{
-						this.velocity[i] = this.transform.up[i]* -.02
 					}
 				}
 				
@@ -876,7 +849,7 @@ Last modified: 4/24/24
 				else
 				{
 					let randomNum = Math.floor(Math.random() * 1000);
-					if(randomNum < 500) // 50% chance bonnie changes direction
+					if(randomNum < 100) // 10% chance bonnie changes direction
 					this.velocity[2] = -this.velocity[2];
 					this.Move();
 				}
@@ -947,7 +920,8 @@ Last modified: 4/24/24
 				super();
 				this.isEnemy = true;
 				//this.isTrigger = true;
-				this.velocity = [0, 0, 0.04];
+				this.walkdown = 0;
+				this.velocity = [0.04, 0.0, -0.04];
 				this.collisionRadius = 0.1;
 				this.buffer=gl.createBuffer();
 				this.health = 8;
@@ -980,8 +954,8 @@ Last modified: 4/24/24
 					this.doDestroy = true;
 					m.DestroyObject(this.id);
 				}
-				else
-					this.Move();
+					
+				this.Move();
 			}
 			Render(program)
 			{
@@ -1024,10 +998,21 @@ Last modified: 4/24/24
 			}
 			onCollisionEnter(other)
 			{
-				if(this.isWall) // change direction when hitting a wall
+				if(other.isWall) // change direction when hitting a wall
 				{
-					this.velocity[2] = -this.velocity[2];
-					console.log("Chica hit a wall");
+					//let randNum = Math.floor(Math.random() * 1);
+					let randNumX = Math.random() * 0.08 - 0.04;
+					let randNumZ = Math.random() * 0.08 - 0.04;
+					//if(randNum == 0)
+					//{
+						this.velocity[2] = randNumZ;
+						this.velocity[0] = randNumX;
+					//}
+					//else if(randNum == 1)
+					//{
+						//this.velocity[0] = randNumX;
+						//this.velocity[2] = 0.0;
+					//}
 				}
 				else if(other.isPlayer)
 				{
@@ -1084,7 +1069,9 @@ Last modified: 4/24/24
 					let randomNum = Math.floor(Math.random() * 1000);
 					if(randomNum < 100) 
 						this.velocity[2] = -this.velocity[2];
-					if(randomNum > 800)
+					else if(randomNum >= 100 && randomNum < 120)
+						this.rot[1] = Math.random() * 1 - 0.1
+					else if(randomNum > 900)
 						this.velocity[0] = -this.velocity[0];
 					this.Move();
 					
@@ -1242,6 +1229,7 @@ Last modified: 4/24/24
 				this.isBullet = true;
 				this.isTrigger = true;
 				this.coolDown = 0;
+				this.collisionRadius = 0.05;
 				this.buffer=gl.createBuffer();
 
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
@@ -1348,6 +1336,7 @@ Last modified: 4/24/24
 				this.velocity = [0.05,0.05,0.05];
 				this.isBullet = true;
 				this.isTrigger = true;
+				this.collisionRadius = 0.05;
 				this.coolDown = 0;
 				this.buffer=gl.createBuffer();
 
@@ -1483,96 +1472,114 @@ Last modified: 4/24/24
 		}
 		
 		
-		/*class Goal extends GameObject
+		class Goal extends GameObject
 		{
 			constructor()
 			{
 				super();
-				this.collisionRadius = 2
-				
-				this.primitiveType = gl.TRIANGLES;
 				this.isTrigger = true;
-				
-				// Create buffer for vertex data
-				this.buffer = gl.createBuffer();
+				this.collisionRadius = 1.0;
+				this.buffer=gl.createBuffer();
+				this.isWall = true;
+
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+
+				this.MyPicture = createEnemy(presentCrate);
 				
-				const yellow = [0.8, 0.7, 0]; // kinda yellow gold
-				
-				this.vertices = new Float32Array([
-					-1.0, -1.0, 1.0, ...yellow, 
-					1.0, -1.0, 1.0, ...yellow,  
-					-1.0, 1.0, 1.0, ...yellow,  
-					1.0, 1.0, 1.0, ...yellow,   
-					-1.0, -1.0, -1.0, ...yellow,
-					1.0, -1.0, -1.0, ...yellow, 
-					-1.0, 1.0, -1.0, ...yellow,
-					1.0, 1.0, -1.0, ...yellow 
-				]);
-				
-				gl.bufferData(gl.ARRAY_BUFFER, this.vertices, gl.STATIC_DRAW);
-				
-				this.indexOrder = new Uint8Array([
-					// Front face
-					0, 1, 2, 2, 1, 3,
-					// Back face
-					4, 5, 6, 6, 5, 7,
-					// Top face
-					1, 5, 3, 3, 5, 7,
-					// Bottom face
-					0, 4, 2, 2, 4, 6,
-					// Right face
-					2, 6, 3, 3, 6, 7,
-					// Left face
-    				0, 1, 4, 4, 1, 5
-				]);
-				
-				this.ibuffer = gl.createBuffer();
-				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.ibuffer);
-				var count = this.indexOrder.length; 
-				var type = gl.UNSIGNED_BYTE; 
-				gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indexOrder, gl.STATIC_DRAW);
+				this.vertices =
+				[
+					1.0, 1.0, -1.0, -1.0, -1.0,
+					-1.0, 1.0, -1.0, -0.0, -1.0,
+					-1.0, 1.0, 1.0, -0.0, -0.0,
+					1.0, 1.0, -1.0, -1.0, -1.0,
+					-1.0, 1.0, 1.0, -0.0, -0.0,
+					1.0, 1.0, 1.0, -1.0, -0.0,
+					1.0, -1.0, 1.0, -1.0, -0.0,
+					1.0, 1.0, 1.0, -1.0, -1.0,
+					-1.0, 1.0, 1.0, -0.0, -1.0,
+					1.0, -1.0, 1.0, -1.0, -0.0,
+					-1.0, 1.0, 1.0, -0.0, -1.0,
+					-1.0, -1.0, 1.0, -0.0, -0.0,
+					-1.0, -1.0, 1.0, -0.0, -0.0,
+					-1.0, 1.0, 1.0, -0.0, -1.0,
+					-1.0, 1.0, -1.0, -1.0, -1.0,
+					-1.0, -1.0, 1.0, -0.0, -0.0,
+					-1.0, 1.0, -1.0, -1.0, -1.0,
+					-1.0, -1.0, -1.0, -1.0, -0.0,
+					-1.0, -1.0, -1.0, -0.0, -1.0,
+					1.0, -1.0, -1.0, -1.0, -1.0,
+					1.0, -1.0, 1.0, -1.0, -0.0,
+					-1.0, -1.0, -1.0, -0.0, -1.0,
+					1.0, -1.0, 1.0, -1.0, -0.0,
+					-1.0, -1.0, 1.0, -0.0, -0.0,
+					1.0, -1.0, -1.0, -1.0, -0.0,
+					1.0, 1.0, -1.0, -1.0, -1.0,
+					1.0, 1.0, 1.0, -0.0, -1.0,
+					1.0, -1.0, -1.0, -1.0, -0.0,
+					1.0, 1.0, 1.0, -0.0, -1.0,
+					1.0, -1.0, 1.0, -0.0, -0.0,
+					-1.0, -1.0, -1.0, -0.0, -0.0,
+					-1.0, 1.0, -1.0, -0.0, -1.0,
+					1.0, 1.0, -1.0, -1.0, -1.0,
+					-1.0, -1.0, -1.0, -0.0, -0.0,
+					1.0, 1.0, -1.0, -1.0, -1.0,
+					1.0, -1.0, -1.0, -1.0, -0.0
+				];
+		
+				this.MyTexture = gl.createTexture();
+				gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
+				//We only want to do this once.
+				gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,64,64,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(this.MyPicture));
+	
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 			}
+
 			Render(program)
 			{
+				var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+				var size = 3;          // 2 components per iteration
+				var type = gl.FLOAT;   // the data is 32bit floats
+				var normalize = false; // don't normalize the data
+		
+				//Make sure you change this to 5 for your TEXTURES
+				var stride = 5*Float32Array.BYTES_PER_ELEMENT;	//Size in bytes of each element     // 0 = move forward size * sizeof(type) each iteration to get the next position
+				var offset = 0;        // start at the beginning of the buffer
+				gl.enableVertexAttribArray(positionAttributeLocation);
+				gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+		
+				var colorAttributeLocation = gl.getAttribLocation(program,"texcord");
+				//We don't have to bind because we already have the correct buffer bound.
+				size = 2;
+				type = gl.FLOAT;
+				normalize = false;
+				stride = 5*Float32Array.BYTES_PER_ELEMENT;	//Size in bytes of each element
+				offset = 3*Float32Array.BYTES_PER_ELEMENT;									//size of the offset
+				gl.enableVertexAttribArray(colorAttributeLocation);
+				gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
+				
+				gl.bindTexture(gl.TEXTURE_2D, this.MyTexture);
+				//setup S
+				gl.texParameteri(gl.TEXTURE_2D,	gl.TEXTURE_WRAP_S,gl.REPEAT); //gl.MIRRORED_REPEAT//gl.CLAMP_TO_EDGE
+				//Sets up our T
+				gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT); //gl.MIRRORED_REPEAT//gl.CLAMP_TO_EDGE                   
+				gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+				gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);					
+				
 				var tranLoc  = gl.getUniformLocation(program,'transform');
 				gl.uniform3fv(tranLoc,new Float32Array(this.loc));
+				var thetaLoc = gl.getUniformLocation(program,'rotation');
+				gl.uniform3fv(thetaLoc,new Float32Array(this.rot));
 				
-				var thetaLoc = gl.getUniformLocation(program, "rotation");
-				gl.uniform3fv(thetaLoc, new Float32Array(this.rot));
-				
-				gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-		
-				var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-				var size = 3;          
-				var type = gl.FLOAT;   
-				var normalize = false; 
-				var stride = 6*Float32Array.BYTES_PER_ELEMENT;	
-				var offset = 0;      
-				gl.enableVertexAttribArray(positionAttributeLocation);
-				gl.vertexAttribPointer(positionAttributeLocation, size, type, false, stride, offset);
-		
-				var colorAttributeLocation = gl.getAttribLocation(program,"vert_color");
-
-				offset = 3 * Float32Array.BYTES_PER_ELEMENT;
-				gl.enableVertexAttribArray(colorAttributeLocation);
-				gl.vertexAttribPointer(colorAttributeLocation, size, type, false, stride, offset);
-		
-		
-				var primitiveType = gl.TRIANGLES;
-				offset = 0;
-				var count = 36;
-				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibuffer);
-    
-				gl.drawElements(this.primitiveType, count, gl.UNSIGNED_BYTE, 0);
+				gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length/5);
 			}
 			
 			onTriggerEnter(other)
 			{
 				if(other.isPlayer == true)
-					m.winText.innerHTML = "YOU ESCAPED THE MAZE";
+					m.winText.innerHTML = "YOU SURVIVED UNTIL 6 AM";
 			}
-		}*/
+		}
 		
 		</script>
 		
@@ -1665,6 +1672,8 @@ Last modified: 4/24/24
 				
 				// map
 				this.mazeArr = [
+						[0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+						[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // 0
 						[1, 1, 0, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], //1 
 						[1, 1, 7, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 7, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//2
 						[1, 1, 0, 0, 0, 0, 1, 2, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//3
@@ -1672,10 +1681,10 @@ Last modified: 4/24/24
 						[1, 0, 1, 2, 2, 0, 0, 0, 0, 1, 2, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//5
 						[1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],//6
 						[1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 0, 0, 6, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],//7
-						[1, 1, 0, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 7, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],//8
-						[1, 0, 0, 2, 1, 0, 0, 0, 5, 0, 0, 0, 0, 0, 2, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],//9
-						[1, 0, 0, 0, 0, 0, 1, 2, 1, 7, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],//10
-						[1, 0, 1, 0, 0, 2, 0, 2, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],//11
+						[1, 1, 0, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 7, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1],//8
+						[1, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1],//9
+						[1, 0, 0, 0, 0, 0, 1, 2, 1, 7, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1],//10
+						[1, 0, 1, 0, 0, 2, 0, 2, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1],//11
 						[1, 7, 1, 0, 2, 0, 0, 0, 0, 1, 2, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1],//12
 						[1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1],//13
 						[1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1],//14
@@ -1686,7 +1695,7 @@ Last modified: 4/24/24
 						[1, 0, 1, 0, 2, 0, 0, 0, 2, 2, 2, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1],//19
 						[1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 7, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1],//20
 						[1, 2, 2, 2, 2, 1, 1, 1, 0, 7, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1],//21
-						[2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1],//22
+						[2, 0, 0, 0, 0, 0, 0, 0, 5, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1],//22
 						[2, 0, 3, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1], //23
 						[2, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1], //24
 						[2, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1],//25
@@ -1701,7 +1710,7 @@ Last modified: 4/24/24
 				this.CreateObject(0,Ground,[0,-1,0],[0,0,0]);
 				
 				//Ceiling
-				this.CreateObject(0,Ground,[0,2.5,0],[0,0,0]);
+				this.CreateObject(0,Ground,[0,2,0],[0,0,0]);
 				
 				// create maze
 				for(let i =0; i < this.mazeArr.length; i++)
@@ -1728,6 +1737,8 @@ Last modified: 4/24/24
 							this.CreateObject(1,Enemy2,[x,0,z],[0,0,0]);
 						else if (this.mazeArr[i][j] === 6)
 							this.CreateObject(1,Enemy3,[x,0,z],[0,0,0]);
+						else if (this.mazeArr[i][j] === 8)
+							this.CreateObject(2,Goal,[x,0,z],[0,0,0]);
 					}
 				}
 				
@@ -1750,6 +1761,8 @@ Last modified: 4/24/24
 							this.CreateObject(1,Enemy3,[x,0,z],[0,0,0]);
 						else if (this.mazeArr[i][j] === 7)
 							this.CreateObject(0,PointLight,[x,0,z],[0,0,0]);
+						else if (this.mazeArr[i][j] === 8)
+							this.CreateObject(2,Goal,[x,0,z],[0,0,0]);
 					}
 				}
 				
